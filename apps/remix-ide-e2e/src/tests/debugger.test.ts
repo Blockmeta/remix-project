@@ -93,7 +93,23 @@ module.exports = {
         _decimals = 18;
     }`) != -1, 
     'current displayed content is not from the ERC20 source code')
-    })
+    })    
+  },
+
+  'Should display correct source highlighting while debugging a contract which has ABIEncoderV2': function (browser: NightwatchBrowser) {
+    browser
+    .clickLaunchIcon('solidity')
+    .setSolidityCompilerVersion('soljson-v0.6.12+commit.27d51765.js')
+    .clickLaunchIcon('udapp')    
+    .testContracts('withABIEncoderV2.sol', sources[2]['browser/withABIEncoderV2.sol'], ['test'])
+    .selectContract('test')
+    .createContract('')
+    .clickInstance(2)
+    .clickFunction('testg - transact (not payable)', {types: 'bytes userData', values: '0x000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000015b38da6a701c568545dcfcb03fcb875f56beddc4'})
+    .debugTransaction(3)
+    .pause(2000)
+    .goToVMTraceStep(147)
+    .waitForElementPresent('.highlightLine8')
     .end()
   },
 
@@ -136,6 +152,28 @@ const sources = [
   },
   {
     'browser/externalImport.sol': {content: 'import "https://github.com/OpenZeppelin/openzeppelin-contracts/blob/master/contracts/token/ERC20/ERC20.sol"; contract test7 {}'}
+  },
+  {
+    'browser/withABIEncoderV2.sol': {content: `
+    pragma experimental ABIEncoderV2;
+
+    contract test {
+    // 000000000000000000000000000000000000000000000000000000000000000200000000000000000000000000000000000000000000000000000000000000015b38da6a701c568545dcfcb03fcb875f56beddc4
+    // 0000000000000000000000000000000000000000000000000000000000000002
+    function testg (bytes calldata userData) external returns (bytes memory, bytes32, bytes32, uint) {
+        bytes32 idAsk = abi.decode(userData[:33], (bytes32));
+        bytes32 idOffer = abi.decode(userData[32:64], (bytes32));
+              
+        bytes memory ro  = abi.encodePacked(msg.sender, msg.sender, idAsk, idOffer);
+        return (ro, idAsk, idOffer, userData.length);
+    }
+    
+    
+    function testgp (bytes calldata userData) external returns (bytes4) {
+        return  abi.decode(userData[:4], (bytes4));
+    }
+}
+    `}
   }
 ]
 

@@ -36,10 +36,19 @@ SourceLocationTracker.prototype.getSourceLocationFromInstructionIndex = async fu
  * @param {Object} contractDetails - AST of compiled contracts
  * @param {Function} cb - callback function
  */
-SourceLocationTracker.prototype.getSourceLocationFromVMTraceIndex = async function (address, vmtraceStepIndex, contracts) {
+SourceLocationTracker.prototype.getSourceLocationFromVMTraceIndex = async function (address, vmtraceStepIndex, contracts) {  
   const sourceMap = await extractSourceMap(this, this.codeManager, address, contracts)
-  const index = this.codeManager.getInstructionIndex(address, vmtraceStepIndex)
+  let index = this.codeManager.getInstructionIndex(address, vmtraceStepIndex)
   return this.sourceMappingDecoder.atIndex(index, sourceMap)
+}
+
+SourceLocationTracker.prototype.getValidSourceLocationFromVMTraceIndex = async function (address, vmtraceStepIndex, contracts) {
+  let map = { file: -1 }
+  while (map.file === -1 && vmtraceStepIndex >= 0) {
+    map = await this.getSourceLocationFromVMTraceIndex(address, vmtraceStepIndex, contracts)
+    vmtraceStepIndex = vmtraceStepIndex - 1
+  }
+  return map
 }
 
 SourceLocationTracker.prototype.clearCache = function () {

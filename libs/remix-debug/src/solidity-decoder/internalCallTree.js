@@ -128,7 +128,7 @@ class InternalCallTree {
   async extractSourceLocation (step) {
     try {
       const address = this.traceManager.getCurrentCalledAddressAt(step)
-      const location = await this.sourceLocationTracker.getSourceLocationFromVMTraceIndex(address, step, this.solidityProxy.contracts)
+      const location = await this.sourceLocationTracker.getValidSourceLocationFromVMTraceIndex(address, step, this.solidityProxy.contracts)
       return location
     } catch (error) {
       throw new Error('InternalCallTree - Cannot retrieve sourcelocation for step ' + step + ' ' + error)
